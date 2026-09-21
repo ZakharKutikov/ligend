@@ -76,25 +76,40 @@ install_deps() {
 
 # ── Download binary ──
 download_binary() {
-    info "Скачивание Ligend Server v${LIGEND_VERSION}..."
-
+    info "Подготовка Ligend Server v${LIGEND_VERSION}..."
     mkdir -p "${BIN_DIR}"
 
-    # Try GitHub releases first, fallback to local build
+    # 1. Check if binary already in /usr/local/bin
+    if [[ -f "${BIN_DIR}/ligend-server" ]] && [[ -x "${BIN_DIR}/ligend-server" ]]; then
+        ok "Используется установленный бинарник: ${BIN_DIR}/ligend-server"
+        return 0
+    fi
+
+    # 2. Check current directory
+    if [[ -f "./ligend-server-linux" ]]; then
+        cp "./ligend-server-linux" "${BIN_DIR}/ligend-server"
+        chmod +x "${BIN_DIR}/ligend-server"
+        ok "Бинарник скопирован из текущей папки: ${BIN_DIR}/ligend-server"
+        return 0
+    fi
+
+    # 3. Check /root/ligend-server-linux
+    if [[ -f "/root/ligend-server-linux" ]]; then
+        cp "/root/ligend-server-linux" "${BIN_DIR}/ligend-server"
+        chmod +x "${BIN_DIR}/ligend-server"
+        ok "Бинарник скопирован из /root: ${BIN_DIR}/ligend-server"
+        return 0
+    fi
+
+    # 4. Try downloading from GitHub
+    info "Попытка скачивания с GitHub..."
     if curl -fsSL --connect-timeout 10 -o "${BIN_DIR}/ligend-server" "${BINARY_URL}" 2>/dev/null; then
         chmod +x "${BIN_DIR}/ligend-server"
-        ok "Бинарник скачан: ${BIN_DIR}/ligend-server"
-    else
-        warn "Не удалось скачать с GitHub. Проверьте URL или загрузите бинарник вручную:"
-        warn "  scp ligend-server-linux root@$(hostname -I | awk '{print $1}'):/usr/local/bin/ligend-server"
-        warn "  chmod +x /usr/local/bin/ligend-server"
-
-        if [[ -f "${BIN_DIR}/ligend-server" ]]; then
-            warn "Используется существующий бинарник"
-        else
-            fail "Бинарник не найден. Загрузите его вручную и запустите скрипт снова."
-        fi
+        ok "Бинарник скачан с GitHub: ${BIN_DIR}/ligend-server"
+        return 0
     fi
+
+    fail "Бинарник ligend-server не найден на сервере! Загрузите его: scp server/ligend-server-linux root@$(hostname -I | awk '{print $1}'):/usr/local/bin/ligend-server"
 }
 
 # ── Generate keys ──
