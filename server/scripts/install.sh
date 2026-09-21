@@ -21,7 +21,7 @@ LIGEND_VERSION="3.5.0"
 INSTALL_DIR="/etc/ligend"
 BIN_DIR="/usr/local/bin"
 SERVICE_FILE="/etc/systemd/system/ligend.service"
-BINARY_URL="https://github.com/nicezakha/ligend/releases/latest/download/ligend-server-linux-amd64"
+BINARY_URL="https://github.com/ZakharKutikov/ligend/releases/latest/download/ligend-server-linux-amd64"
 
 # ── Helpers ──
 info()  { echo -e "${CYAN}[INFO]${NC}  $1"; }
