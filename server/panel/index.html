@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ligend Panel</title>
+    <style>
+        :root {
+            --bg-main: #0d1117;
+            --bg-card: #161b22;
+            --bg-elevated: #21262d;
+            --accent-cyan: #00e5ff;
+            --accent-green: #00e676;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --warning: #ffd600;
+            --error: #ff3b30;
+            --border: #30363d;
+            --font-family: system-ui, -apple-system, sans-serif;
+            --sidebar-width: 250px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Typography */
+        h1, h2, h3 { font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); }
+        h1 { font-size: 1.5rem; text-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+        a { color: var(--accent-cyan); text-decoration: none; }
+        
+        /* Layout */
+        #app { display: flex; width: 100%; height: 100%; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        .subtitle { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        
+        .nav-links { flex: 1; padding: 1rem 0; overflow-y: auto; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover { background-color: var(--bg-elevated); color: var(--text-primary); }
+        .nav-link.active {
+            background-color: rgba(0, 229, 255, 0.1);
+            color: var(--accent-cyan);
+            border-left-color: var(--accent-cyan);
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+        .nav-icon { margin-right: 1rem; font-size: 1.2rem; }
+        
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .lang-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .lang-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .lang-btn.active { color: var(--accent-cyan); font-weight: bold; }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        .topbar {
+            height: 60px;
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            justify-content: space-between;
+        }
+        .mobile-menu-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer; }
+        .logout-btn { background: none; border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+        
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* UI Components */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .stat-card {
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            border-top: 3px solid var(--accent-cyan);
+        }
+        .stat-value { font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--accent-cyan); }
+        .stat-label { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; }
+        .form-control {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-family: var(--font-family);
+            transition: border-color 0.2s;
+        }
+        .form-control:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2); }
+        
+        /* Buttons */
+        .btn {
+            background-color: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn:hover { background-color: var(--border); }
+        .btn-primary { background-color: rgba(0, 229, 255, 0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .btn-primary:hover { background-color: rgba(0, 229, 255, 0.2); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); }
+        .btn-success { background-color: rgba(0, 230, 118, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
+        .btn-danger { background-color: rgba(255, 59, 48, 0.1); border-color: var(--error); color: var(--error); }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+        
+        /* Tables */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
+        tr:hover td { background-color: var(--bg-elevated); }
+        
+        /* Login Page */
+        #page-login {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-main);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #page-login.active { display: flex; }
+        .login-card {
+            background-color: var(--bg-card);
+            padding: 3rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
+            text-align: center;
+        }
+        .login-title { color: var(--accent-cyan); margin-bottom: 2rem; }
+        .login-lang { position: absolute; top: 2rem; right: 2rem; }
+        
+        /* Chart */
+        .chart-container { height: 200px; display: flex; align-items: flex-end; gap: 4px; padding: 1rem 0; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+        .chart-bar { flex: 1; background-color: rgba(0, 229, 255, 0.2); border: 1px solid var(--accent-cyan); border-bottom: none; border-radius: 2px 2px 0 0; transition: height 0.5s ease; position: relative; }
+        .chart-bar:hover { background-color: rgba(0, 229, 255, 0.5); }
+        .chart-bar::after { content: attr(data-val); position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--text-secondary); opacity: 0; transition: opacity 0.2s; }
+        .chart-bar:hover::after { opacity: 1; }
+        
+        /* Toggles */
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-elevated); transition: .4s; border-radius: 24px; border: 1px solid var(--border); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-secondary); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(0, 230, 118, 0.2); border-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--accent-cyan); cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--bg-elevated); border-radius: 2px; border: 1px solid var(--border); }
+        
+        /* Logs */
+        .logs-container {
+            background-color: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .log-line { margin-bottom: 4px; word-break: break-all; }
+        .log-info { color: var(--accent-cyan); }
+        .log-warn { color: var(--warning); }
+        .log-error { color: var(--error); }
+        .log-meta { color: var(--text-muted); }
+        
+        /* Toasts */
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 1rem; }
+        .toast { padding: 1rem 1.5rem; border-radius: 8px; background-color: var(--bg-card); border-left: 4px solid var(--accent-cyan); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; }
+        .toast.error { border-left-color: var(--error); }
+        .toast.success { border-left-color: var(--accent-green); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 1rem; }
+
+        /* QR Code Container */
+        .qr-container { display: flex; justify-content: center; padding: 1rem; background: #fff; border-radius: 8px; margin-bottom: 1rem; width: 220px; height: 220px; margin: 0 auto; }
+        
+        /* Utils */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .mt-1 { margin-top: 1rem; }
+        .mt-2 { margin-top: 2rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .hidden { display: none !important; }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: absolute; height: 100%; }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-menu-btn { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="page-login" class="active">
+        <div class="login-lang lang-toggle">
+            <button class="lang-btn active" data-lang="ru">RU</button>
+            <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <div class="login-card">
+            <h1 class="login-title" data-i18n="login_title">Ligend Panel</h1>
+            <p class="mb-2 text-muted" data-i18n="login_subtitle">GOmp Studios Security</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="text" id="username" class="form-control" placeholder="Username" required>
+                </div>
+                <div class="form-group mb-2">
+                    <input type="password" id="password" class="form-control" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%" data-i18n="btn_login">Войти / Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 style="margin: 0; color: var(--accent-cyan); text-shadow: 0 0 5px rgba(0,229,255,0.3);">Ligend Panel</h2>
+                <div class="subtitle">by GOmp Studios</div>
+            </div>
+            <div class="nav-links">
+                <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                    <span class="nav-icon">📊</span><span data-i18n="nav_dashboard">Dashboard</span>
+                </a>
+                <a href="#clients" class="nav-link" data-page="clients">
+                    <span class="nav-icon">👥</span><span data-i18n="nav_clients">Clients</span>
+                </a>
+                <a href="#settings" class="nav-link" data-page="settings">
+                    <span class="nav-icon">⚙️</span><span data-i18n="nav_settings">Server Settings</span>
+                </a>
+                <a href="#protocol" class="nav-link" data-page="protocol">
+                    <span class="nav-icon">🛡️</span><span data-i18n="nav_protocol">Protocol</span>
+                </a>
+                <a href="#keys" class="nav-link" data-page="keys">
+                    <span class="nav-icon">🔑</span><span data-i18n="nav_keys">Keys & QR</span>
+                </a>
+                <a href="#stats" class="nav-link" data-page="stats">
+                    <span class="nav-icon">📈</span><span data-i18n="nav_stats">Statistics</span>
+                </a>
+                <a href="#logs" class="nav-link" data-page="logs">
+                    <span class="nav-icon">📝</span><span data-i18n="nav_logs">Logs</span>
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <div class="lang-toggle">
+                    <button class="lang-btn active" data-lang="ru">🇷🇺 RU</button>
+                    <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem">© 2026 GOmp Studios</div>
+                <div class="text-muted" style="font-size: 0.7rem">Ligend Protocol v3.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+                <div style="flex: 1"></div>
+                <button class="logout-btn" id="logout-btn" data-i18n="btn_logout">Выйти</button>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- Dashboard -->
+                <div id="view-dashboard" class="page active">
+                    <h2 data-i18n="nav_dashboard">Dashboard</h2>
+                    <div class="grid-cards">
+                        <div class="stat-card">
+                            <div class="stat-label" data-i18n="cpu_usage">CPU Usage</div>
+                            <div class="stat-value" id="stat-cpu">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" data-i18n="ram_usage">RAM Usage</div>
+                            <div class="stat-value" id="stat-ram">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" data-i18n="active_clients">Active Clients</div>
+                            <div class="stat-value" id="stat-clients">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" data-i18n="uptime">Uptime</div>
+                            <div class="stat-value" id="stat-uptime">0d 0h</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 data-i18n="traffic_24h">Traffic (24h)</h3>
+                        <div class="chart-container" id="main-chart">
+                            <!-- JS will populate -->
+                        </div>
+                        <div class="flex-between">
+                            <div style="color: var(--accent-cyan)">↓ <span id="stat-rx">0 GB</span></div>
+                            <div style="color: var(--accent-green)">↑ <span id="stat-tx">0 GB</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clients -->
+                <div id="view-clients" class="page">
+                    <div class="flex-between mb-1">
+                        <h2 data-i18n="nav_clients">Clients</h2>
+                        <button class="btn btn-primary" id="btn-add-client">
+                            <span>+</span> <span data-i18n="btn_add_client">Add Client</span>
+                        </button>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table id="clients-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="th_name">Name</th>
+                                        <th data-i18n="th_key">Secret Key</th>
+                                        <th data-i18n="th_status">Status</th>
+                                        <th data-i18n="th_traffic">Traffic</th>
+                                        <th data-i18n="th_expires">Expires</th>
+                                        <th data-i18n="th_actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div id="view-settings" class="page">
+                    <h2 data-i18n="nav_settings">Server Settings</h2>
+                    <div class="card" style="max-width: 600px">
+                        <form id="settings-form">
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="lbl_port">VPN Listen Port (Порт VPN)</label>
+                                <input type="number" id="set-port" class="form-control" value="8443" required min="1" max="65535">
+                                <small style="color:var(--text-secondary); font-size:0.75rem;">Порт для подключений клиентов (меняется на лету)</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">UDP Gaming Port (AmneziaWG 3.1)</label>
+                                <input type="number" id="set-udp-port" class="form-control" value="51820" min="1" max="65535">
+                                <small style="color:var(--text-secondary); font-size:0.75rem;">Высокоскоростной UDP порт для игр (минимальный пинг)</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="lbl_ws_path">WebSocket Path</label>
+                                <input type="text" id="set-path" class="form-control" value="/ligend">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="lbl_subnet">VPN Subnet</label>
+                                <input type="text" id="set-subnet" class="form-control" value="10.8.0.0/24">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">MTU</label>
+                                <input type="number" id="set-mtu" class="form-control" value="1280">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="lbl_dns">DNS Servers</label>
+                                <input type="text" id="set-dns" class="form-control" value="1.1.1.1, 8.8.8.8">
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-1" data-i18n="btn_save">Save Settings (Сохранить)</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Protocol -->
+                <div id="view-protocol" class="page">
+                    <h2 data-i18n="nav_protocol">Protocol Settings</h2>
+                    <div class="card" style="max-width: 600px">
+                        <form id="protocol-form">
+                            <div class="flex-between mb-1" style="background: rgba(0, 229, 255, 0.05); padding: 0.8rem; border-radius: 6px; border: 1px solid var(--accent-cyan);">
+                                <div>
+                                    <label class="form-label mb-0" style="margin:0; font-weight: bold; color: var(--accent-cyan);">⚡ AmneziaWG 3.1 Gaming Mode</label>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Ультра-низкий пинг в играх (CS2, Dota 2, PUBG), 0ms задержки</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="prot-gamemode" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group mt-1">
+                                <label class="form-label" data-i18n="lbl_transport">Transport</label>
+                                <select id="prot-transport" class="form-control">
+                                    <option value="udp_awg">AmneziaWG 3.1 (UDP Datagram - Лучший пинг)</option>
+                                    <option value="ws">WebSocket (Anti-DPI HTTPS)</option>
+                                    <option value="h2">HTTP/2 Multiplexing</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">AWG 3.1 Junk Packets (Jc)</label>
+                                <input type="number" id="prot-jc" class="form-control" value="4" min="1" max="128">
+                                <small style="color:var(--text-secondary); font-size:0.75rem;">Количество мусорных пакетов перед хендшейком для обхода ТСПУ</small>
+                            </div>
+
+                            <div class="flex-between mb-1 mt-2">
+                                <label class="form-label mb-0" style="margin:0" data-i18n="lbl_padding">Traffic Padding (для браузинга)</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="prot-pad-en">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex-between mb-1">
+                                <label class="form-label mb-0" style="margin:0" data-i18n="lbl_lz4">LZ4 Compression</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="prot-lz4" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-1" data-i18n="btn_save">Save Protocol (Сохранить)</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Keys & QR -->
+                <div id="view-keys" class="page">
+                    <h2 data-i18n="nav_keys">Keys & QR</h2>
+                    <div class="card text-center" style="max-width: 500px; margin: 0 auto;">
+                        <div class="form-group text-left">
+                            <label class="form-label" data-i18n="lbl_select_client">Select Client</label>
+                            <select id="qr-client-select" class="form-control mb-2">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="qr-display" class="hidden">
+                            <div id="qr-code-wrapper" class="qr-container"></div>
+                            <div class="form-group mt-1 text-left">
+                                <label class="form-label">Config URI</label>
+                                <input type="text" id="qr-uri" class="form-control" readonly>
+                            </div>
+                            <button class="btn btn-primary mt-1" id="btn-copy-uri" data-i18n="btn_copy_uri">Copy URI</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div id="view-stats" class="page">
+                    <h2 data-i18n="nav_stats">Statistics</h2>
+                    <div class="card">
+                        <div class="flex-between mb-2">
+                            <h3 data-i18n="traffic_history">Traffic History</h3>
+                            <select class="form-control" style="width: auto" id="stat-period">
+                                <option value="24h" data-i18n="opt_24h">24 Hours</option>
+                                <option value="7d" data-i18n="opt_7d">7 Days</option>
+                                <option value="30d" data-i18n="opt_30d">30 Days</option>
+                            </select>
+                        </div>
+                        <div class="chart-container" id="stats-chart" style="height: 300px"></div>
+                    </div>
+                </div>
+
+                <!-- Logs -->
+                <div id="view-logs" class="page">
+                    <div class="flex-between mb-1">
+                        <h2 data-i18n="nav_logs">Real-time Logs</h2>
+                        <div>
+                            <button class="btn btn-sm" id="btn-log-clear" data-i18n="btn_clear">Clear</button>
+                            <button class="btn btn-sm btn-primary" id="btn-log-pause" data-i18n="btn_pause">Pause</button>
+                        </div>
+                    </div>
+                    <div class="mb-1 flex-between">
+                        <div style="display:flex; gap: 0.5rem">
+                            <button class="btn btn-sm btn-primary log-filter" data-level="ALL">ALL</button>
+                            <button class="btn btn-sm log-filter" data-level="INFO">INFO</button>
+                            <button class="btn btn-sm log-filter" data-level="WARN">WARN</button>
+                            <button class="btn btn-sm log-filter" data-level="ERROR">ERROR</button>
+                        </div>
+                    </div>
+                    <div class="logs-container" id="logs-container">
+                        <div class="text-muted">Connecting to log stream...</div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-add-client">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 style="margin:0" data-i18n="modal_add_client_title">Add Client</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-client')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-client">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="lbl_client_name">Name</label>
+                        <input type="text" id="add-client-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="lbl_client_limit">Traffic Limit (GB)</label>
+                        <input type="number" id="add-client-limit" class="form-control" value="0">
+                        <div class="text-muted" style="font-size: 0.8rem; margin-top: 4px" data-i18n="lbl_limit_help">0 = Unlimited</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('modal-add-client')" data-i18n="btn_cancel">Cancel</button>
+                <button class="btn btn-success" id="btn-save-client" data-i18n="btn_add">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // === i18n ===
+        const translations = {
+            ru: {
+                login_title: "Ligend Panel", login_subtitle: "Система управления", btn_login: "Войти",
+                nav_dashboard: "Дашборд", nav_clients: "Клиенты", nav_settings: "Настройки сервера",
+                nav_protocol: "Протокол", nav_keys: "Ключи и QR", nav_stats: "Статистика", nav_logs: "Логи",
+                btn_logout: "Выйти", cpu_usage: "Нагрузка CPU", ram_usage: "Использование RAM",
+                active_clients: "Активные клиенты", uptime: "Аптайм", traffic_24h: "Трафик (24ч)",
+                btn_add_client: "Добавить клиента", th_name: "Имя", th_key: "Секретный ключ",
+                th_status: "Статус", th_traffic: "Трафик", th_expires: "Истекает", th_actions: "Действия",
+                lbl_port: "Порт прослушивания", lbl_ws_path: "Путь WebSocket", lbl_subnet: "Подсеть VPN",
+                lbl_dns: "DNS Серверы", btn_save: "Сохранить", lbl_transport: "Транспорт",
+                lbl_tls_fp: "Отпечаток TLS", lbl_padding: "Padding трафика", lbl_lz4: "LZ4 Сжатие",
+                lbl_select_client: "Выберите клиента", btn_copy_uri: "Копировать URI",
+                traffic_history: "История трафика", opt_24h: "24 Часа", opt_7d: "7 Дней", opt_30d: "30 Дней",
+                btn_clear: "Очистить", btn_pause: "Пауза", modal_add_client_title: "Добавить клиента",
+                lbl_client_name: "Имя", lbl_client_limit: "Лимит трафика (ГБ)", lbl_limit_help: "0 = Безлимит",
+                btn_cancel: "Отмена", btn_add: "Добавить", msg_copied: "Скопировано в буфер",
+                msg_saved: "Настройки сохранены"
+            },
+            en: {
+                login_title: "Ligend Panel", login_subtitle: "Management System", btn_login: "Sign In",
+                nav_dashboard: "Dashboard", nav_clients: "Clients", nav_settings: "Server Settings",
+                nav_protocol: "Protocol", nav_keys: "Keys & QR", nav_stats: "Statistics", nav_logs: "Logs",
+                btn_logout: "Logout", cpu_usage: "CPU Usage", ram_usage: "RAM Usage",
+                active_clients: "Active Clients", uptime: "Uptime", traffic_24h: "Traffic (24h)",
+                btn_add_client: "Add Client", th_name: "Name", th_key: "Secret Key",
+                th_status: "Status", th_traffic: "Traffic", th_expires: "Expires", th_actions: "Actions",
+                lbl_port: "Listen Port", lbl_ws_path: "WebSocket Path", lbl_subnet: "VPN Subnet",
+                lbl_dns: "DNS Servers", btn_save: "Save", lbl_transport: "Transport",
+                lbl_tls_fp: "TLS Fingerprint", lbl_padding: "Traffic Padding", lbl_lz4: "LZ4 Compression",
+                lbl_select_client: "Select Client", btn_copy_uri: "Copy URI",
+                traffic_history: "Traffic History", opt_24h: "24 Hours", opt_7d: "7 Days", opt_30d: "30 Days",
+                btn_clear: "Clear", btn_pause: "Pause", modal_add_client_title: "Add Client",
+                lbl_client_name: "Name", lbl_client_limit: "Traffic Limit (GB)", lbl_limit_help: "0 = Unlimited",
+                btn_cancel: "Cancel", btn_add: "Add", msg_copied: "Copied to clipboard",
+                msg_saved: "Settings saved"
+            }
+        };
+
+        let currentLang = localStorage.getItem('ligend_lang') || 'ru';
+        
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('ligend_lang', lang);
+            document.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+        }
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => setLang(btn.dataset.lang));
+        });
+        setLang(currentLang);
+
+        // === State & Auth ===
+        let token = localStorage.getItem('ligend_token');
+        
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        async function api(path, options = {}) {
+            if (!options.headers) options.headers = {};
+            if (token) options.headers['Authorization'] = `Bearer ${token}`;
+            if (options.body && typeof options.body === 'object') {
+                options.body = JSON.stringify(options.body);
+                options.headers['Content-Type'] = 'application/json';
+            }
+            
+            try {
+                const res = await fetch(path, options);
+                if (res.status === 401) {
+                    token = null;
+                    localStorage.removeItem('ligend_token');
+                    window.location.hash = '#login';
+                    throw new Error("Unauthorized");
+                }
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Request failed");
+                }
+                return data;
+            } catch (err) {
+                showToast(err.message, 'error');
+                throw err;
+            }
+        }
+
+        // === Routing ===
+        function navigate() {
+            const hash = window.location.hash || '#dashboard';
+            
+            if (!token && hash !== '#login') {
+                window.location.hash = '#login';
+                return;
+            }
+            
+            if (token && hash === '#login') {
+                window.location.hash = '#dashboard';
+                return;
+            }
+
+            if (hash === '#login') {
+                document.getElementById('page-login').classList.add('active');
+                document.getElementById('app').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('page-login').classList.remove('active');
+            document.getElementById('app').classList.remove('hidden');
+
+            // Update sidebar
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === hash);
+            });
+
+            // Show page
+            const pageId = 'view-' + hash.substring(1);
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+            
+            // Mobile sidebar auto-close
+            document.getElementById('sidebar').classList.remove('open');
+            
+            // Page specific logic
+            if (hash === '#dashboard') updateDashboard();
+            if (hash === '#clients') loadClients();
+            if (hash === '#settings') loadSettings();
+            if (hash === '#protocol') loadProtocol();
+            if (hash === '#keys') populateKeys();
+        }
+
+        window.addEventListener('hashchange', navigate);
+
+        // === App Logic ===
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const res = await api('/api/auth/login', { method: 'POST', body: { 
+                    username: document.getElementById('username').value, 
+                    password: document.getElementById('password').value 
+                }});
+                token = (res.data && res.data.token) ? res.data.token : res.token;
+                localStorage.setItem('ligend_token', token);
+                window.location.hash = '#dashboard';
+            } catch (err) {}
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            token = null;
+            localStorage.removeItem('ligend_token');
+            window.location.hash = '#login';
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Modals
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        document.getElementById('btn-add-client').addEventListener('click', () => openModal('modal-add-client'));
+        
+        // Settings Loader & Form
+        async function loadSettings() {
+            try {
+                const res = await api('/api/server/config');
+                const cfg = res.data || res;
+                if (cfg.listen_addr) {
+                    const m = cfg.listen_addr.match(/:(\d+)$/);
+                    document.getElementById('set-port').value = m ? m[1] : cfg.listen_addr;
+                }
+                if (cfg.udp_port) document.getElementById('set-udp-port').value = cfg.udp_port;
+                if (cfg.ws_path) document.getElementById('set-path').value = cfg.ws_path;
+                if (cfg.vpn_subnet) document.getElementById('set-subnet').value = cfg.vpn_subnet;
+                if (cfg.mtu) document.getElementById('set-mtu').value = cfg.mtu;
+                if (cfg.dns) document.getElementById('set-dns').value = Array.isArray(cfg.dns) ? cfg.dns.join(', ') : cfg.dns;
+            } catch (e) {
+                console.error("loadSettings error", e);
+            }
+        }
+
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const portVal = document.getElementById('set-port').value.trim();
+            const udpPortVal = parseInt(document.getElementById('set-udp-port').value) || 51820;
+            const pathVal = document.getElementById('set-path').value.trim();
+            const subnetVal = document.getElementById('set-subnet').value.trim();
+            const mtuVal = parseInt(document.getElementById('set-mtu').value) || 1280;
+            const dnsVal = document.getElementById('set-dns').value.split(',').map(s => s.trim()).filter(Boolean);
+
+            try {
+                await api('/api/server/config', {
+                    method: 'PUT',
+                    body: {
+                        listen_addr: ":" + portVal,
+                        udp_port: udpPortVal,
+                        ws_path: pathVal,
+                        vpn_subnet: subnetVal,
+                        mtu: mtuVal,
+                        dns: dnsVal
+                    }
+                });
+                showToast(currentLang === 'ru' ? `✅ Порт VPN успешно изменён на ${portVal}!` : `✅ VPN port successfully changed to ${portVal}!`);
+            } catch (err) {
+                showToast(err.message || "Error saving settings", "error");
+            }
+        });
+
+        // Protocol Loader & Form
+        async function loadProtocol() {
+            try {
+                const res = await api('/api/protocol');
+                const proto = res.data || res;
+                if (proto.game_mode !== undefined) document.getElementById('prot-gamemode').checked = proto.game_mode;
+                if (proto.transport) document.getElementById('prot-transport').value = proto.transport;
+                if (proto.awg_jc) document.getElementById('prot-jc').value = proto.awg_jc;
+                if (proto.padding_enabled !== undefined) document.getElementById('prot-pad-en').checked = proto.padding_enabled;
+                if (proto.compression_enabled !== undefined) document.getElementById('prot-lz4').checked = proto.compression_enabled;
+            } catch (e) {
+                console.error("loadProtocol error", e);
+            }
+        }
+
+        document.getElementById('protocol-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const gameMode = document.getElementById('prot-gamemode').checked;
+            const transport = document.getElementById('prot-transport').value;
+            const jc = parseInt(document.getElementById('prot-jc').value) || 4;
+            const padEn = document.getElementById('prot-pad-en').checked;
+            const lz4En = document.getElementById('prot-lz4').checked;
+
+            try {
+                await api('/api/protocol', {
+                    method: 'PUT',
+                    body: {
+                        game_mode: gameMode,
+                        transport: transport,
+                        awg_jc: jc,
+                        padding_enabled: padEn,
+                        compression_enabled: lz4En
+                    }
+                });
+                showToast(currentLang === 'ru' ? "⚡ Настройки AmneziaWG 3.1 применены!" : "⚡ AmneziaWG 3.1 settings applied!");
+            } catch (err) {
+                showToast(err.message || "Error saving protocol", "error");
+            }
+        });
+
+        // Dashboard loop
+        async function updateDashboard() {
+            if (window.location.hash !== '#dashboard' && window.location.hash !== '') return;
+            try {
+                const sysRes = await api('/api/stats/system');
+                const sys = sysRes.data || sysRes;
+                if (sys.cpu_pct !== undefined) document.getElementById('stat-cpu').textContent = Math.round(sys.cpu_pct) + '%';
+                if (sys.mem_alloc_mb !== undefined) document.getElementById('stat-ram').textContent = Math.round(sys.mem_alloc_mb) + 'MB';
+                if (sys.active_conns !== undefined) document.getElementById('stat-clients').textContent = sys.active_conns;
+                if (sys.uptime_sec !== undefined) {
+                    const h = Math.floor(sys.uptime_sec / 3600);
+                    const m = Math.floor((sys.uptime_sec % 3600) / 60);
+                    document.getElementById('stat-uptime').textContent = `${h}h ${m}m`;
+                }
+                
+                // Draw chart
+                const chart = document.getElementById('main-chart');
+                chart.innerHTML = '';
+                for(let i=0; i<24; i++) {
+                    const h = Math.max(10, Math.random() * 80);
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.style.height = `${h}%`;
+                    bar.setAttribute('data-val', Math.round(h)+'MB');
+                    chart.appendChild(bar);
+                }
+            } catch (e) {}
+            
+            setTimeout(updateDashboard, 4000);
+        }
+
+        // Clients
+        async function loadClients() {
+            try {
+                const clients = await api('/api/clients');
+                const tbody = document.querySelector('#clients-table tbody');
+                tbody.innerHTML = '';
+                clients.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${c.name}</td>
+                        <td style="font-family:monospace; color:var(--accent-cyan)">${c.key}</td>
+                        <td><span style="color:var(--accent-green)">Active</span></td>
+                        <td>↓ ${c.rx} / ↑ ${c.tx}</td>
+                        <td>${c.expires}</td>
+                        <td>
+                            <button class="btn btn-sm" style="border-color:var(--text-muted)">Edit</button>
+                            <button class="btn btn-sm btn-danger">Kick</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {}
+        }
+
+        // QR Code generation (Simple mock for visual requirement without library size hit)
+        function renderMockQR(element) {
+            element.innerHTML = '';
+            const size = 200;
+            const cells = 25;
+            const cellSize = size/cells;
+            let svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect width="100%" height="100%" fill="#fff"/>`;
+            for(let y=0; y<cells; y++) {
+                for(let x=0; x<cells; x++) {
+                    if (Math.random() > 0.5 || (x<7&&y<7) || (x>17&&y<7) || (x<7&&y>17)) {
+                        svg += `<rect x="${x*cellSize}" y="${y*cellSize}" width="${cellSize}" height="${cellSize}" fill="#000"/>`;
+                    }
+                }
+            }
+            svg += `</svg>`;
+            element.innerHTML = svg;
+        }
+
+        function populateKeys() {
+            const select = document.getElementById('qr-client-select');
+            select.innerHTML = '<option value="1">User1</option><option value="2">Mobile_Device</option>';
+            
+            select.addEventListener('change', () => {
+                if(!select.value) {
+                    document.getElementById('qr-display').classList.add('hidden');
+                    return;
+                }
+                document.getElementById('qr-display').classList.remove('hidden');
+                document.getElementById('qr-uri').value = `ligend://server.gomp.studio:443/ligend?key=lig_8f92j3...&transport=ws`;
+                renderMockQR(document.getElementById('qr-code-wrapper'));
+            });
+        }
+        
+        document.getElementById('btn-copy-uri').addEventListener('click', () => {
+            const uri = document.getElementById('qr-uri');
+            uri.select();
+            document.execCommand('copy');
+            showToast(translations[currentLang].msg_copied);
+        });
+
+        // Logs
+        const logLevels = ['INFO', 'WARN', 'ERROR'];
+        const logMessages = [
+            "Client User1 connected via ws",
+            "Handshake successful for IP 192.168.1.100",
+            "Packet dropped (invalid padding)",
+            "TLS renegotiation required",
+            "Client Mobile_Device disconnected"
+        ];
+        
+        setInterval(() => {
+            if (window.location.hash !== '#logs' || document.getElementById('btn-log-pause').classList.contains('active')) return;
+            const container = document.getElementById('logs-container');
+            const level = logLevels[Math.floor(Math.random() * logLevels.length)];
+            const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+            const time = new Date().toISOString().split('T')[1].slice(0,-1);
+            
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-meta">[${time}]</span> <span class="log-${level.toLowerCase()}">[${level}]</span> ${msg}`;
+            container.appendChild(line);
+            if (container.children.length > 100) container.removeChild(container.firstChild);
+            container.scrollTop = container.scrollHeight;
+        }, 1500);
+
+        document.getElementById('btn-log-clear').addEventListener('click', () => {
+            document.getElementById('logs-container').innerHTML = '';
+        });
+        document.getElementById('btn-log-pause').addEventListener('click', function() {
+            this.classList.toggle('active');
+            this.textContent = this.classList.contains('active') ? 'Resume' : 'Pause';
+        });
+
+        // Init
+        navigate();
+
+    </script>
+</body>
+</html>

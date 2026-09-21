@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Технологический блог о разработке, DevOps и облачных технологиях">
+    <title>CloudDev Notes — Блог о технологиях</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --surface: #ffffff;
+            --background: #f8f9fa;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            margin-left: 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover { color: var(--primary); }
+
+        main { padding: 40px 0; }
+
+        .hero {
+            text-align: center;
+            padding: 48px 0;
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .posts { display: grid; gap: 24px; margin-top: 40px; }
+
+        .post {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 32px;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s;
+        }
+
+        .post:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .post-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .post-meta .tag {
+            background: #e8f0fe;
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .post h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .post h2 a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .post h2 a:hover { color: var(--primary); }
+
+        .post p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .read-more {
+            display: inline-block;
+            margin-top: 12px;
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 48px;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 28px; }
+            .post { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">☁ CloudDev Notes</a>
+                <div class="nav-links">
+                    <a href="/">Статьи</a>
+                    <a href="/">DevOps</a>
+                    <a href="/">О блоге</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="hero">
+                <h1>CloudDev Notes</h1>
+                <p>Заметки о разработке, инфраструктуре и облачных технологиях</p>
+            </div>
+
+            <div class="posts">
+                <article class="post">
+                    <div class="post-meta">
+                        <span class="tag">Kubernetes</span> · 15 августа 2026
+                    </div>
+                    <h2><a href="/">Оптимизация ресурсов в Kubernetes: VPA vs HPA</a></h2>
+                    <p>Разбираем стратегии вертикального и горизонтального автоскейлинга подов. Когда VPA лучше HPA, как настроить гибридный подход и избежать OOMKill при пиковых нагрузках.</p>
+                    <a href="/" class="read-more">Читать далее →</a>
+                </article>
+
+                <article class="post">
+                    <div class="post-meta">
+                        <span class="tag">Go</span> · 10 августа 2026
+                    </div>
+                    <h2><a href="/">Паттерны конкурентности в Go: от горутин к structured concurrency</a></h2>
+                    <p>Почему errgroup не всегда достаточно, как реализовать graceful shutdown для дерева горутин и зачем нужны контекстные деревья. Практические примеры из продакшена.</p>
+                    <a href="/" class="read-more">Читать далее →</a>
+                </article>
+
+                <article class="post">
+                    <div class="post-meta">
+                        <span class="tag">PostgreSQL</span> · 5 августа 2026
+                    </div>
+                    <h2><a href="/">PostgreSQL 17: что нового для разработчиков</a></h2>
+                    <p>Обзор ключевых изменений в PG 17: JSON_TABLE, улучшенная параллелизация, инкрементальный бэкап и новые возможности logical replication. Миграция с PG 16.</p>
+                    <a href="/" class="read-more">Читать далее →</a>
+                </article>
+
+                <article class="post">
+                    <div class="post-meta">
+                        <span class="tag">DevOps</span> · 28 июля 2026
+                    </div>
+                    <h2><a href="/">Terraform vs Pulumi в 2026: что выбрать для IaC</a></h2>
+                    <p>Сравниваем два популярных инструмента Infrastructure as Code. HCL против обычных языков программирования, state management, экосистема провайдеров и реальный опыт миграции.</p>
+                    <a href="/" class="read-more">Читать далее →</a>
+                </article>
+
+                <article class="post">
+                    <div class="post-meta">
+                        <span class="tag">Security</span> · 20 июля 2026
+                    </div>
+                    <h2><a href="/">Zero Trust архитектура: от теории к практике</a></h2>
+                    <p>Пошаговое внедрение Zero Trust в микросервисной архитектуре. Service mesh, mTLS, OPA policies и интеграция с корпоративным IdP. Кейс миграции с 200+ сервисов.</p>
+                    <a href="/" class="read-more">Читать далее →</a>
+                </article>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 CloudDev Notes. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Minimal analytics-like behavior for realism
+        (function() {
+            var start = Date.now();
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    var duration = Math.round((Date.now() - start) / 1000);
+                    navigator.sendBeacon && navigator.sendBeacon('/', '');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

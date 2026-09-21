@@ -1,0 +1,36 @@
+[Unit]
+Description=Ligend VPN Server
+Documentation=https://github.com/ligend/ligend-server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+ExecStart=/usr/local/bin/ligend-server -config /etc/ligend/ligend.yaml
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=always
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=30
+
+# Security hardening
+NoNewPrivileges=no
+ProtectSystem=strict
+ReadWritePaths=/dev/net/tun /etc/ligend
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ligend
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
