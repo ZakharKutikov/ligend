@@ -21,7 +21,7 @@ LIGEND_VERSION="3.5.0"
 INSTALL_DIR="/etc/ligend"
 BIN_DIR="/usr/local/bin"
 SERVICE_FILE="/etc/systemd/system/ligend.service"
-BINARY_URL="https://github.com/ZakharKutikov/ligend/releases/latest/download/ligend-server-linux-amd64"
+BINARY_URL="https://github.com/nicezakha/ligend/releases/latest/download/ligend-server-linux-amd64"
 
 # ── Helpers ──
 info()  { echo -e "${CYAN}[INFO]${NC}  $1"; }
@@ -59,9 +59,18 @@ preflight() {
 # ── Install dependencies ──
 install_deps() {
     info "Установка зависимостей..."
-    apt-get update -qq
-    apt-get install -y -qq curl wget nginx certbot python3-certbot-nginx \
-        iptables iptables-persistent net-tools > /dev/null 2>&1
+    
+    # Kill any stale apt processes & locks
+    rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock* 2>/dev/null || true
+
+    # Pre-seed iptables-persistent to avoid interactive debconf prompts hanging
+    echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections 2>/dev/null || true
+    echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections 2>/dev/null || true
+
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y -q
+    apt-get install -y -q -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+        curl wget nginx certbot python3-certbot-nginx iptables iptables-persistent net-tools
     ok "Зависимости установлены"
 }
 
